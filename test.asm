@@ -22,11 +22,11 @@ _start:
 
 print:
     mov al,[si] ; copie
-    inc si
     cmp al,0
     je done
     mov ah,0x0e
     int 0x10
+    inc si
     jmp print
 
 done:
