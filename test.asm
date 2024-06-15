@@ -15,9 +15,23 @@ _start:
     mov ds,ax
     mov es,ax
     mov si,msg
-    call print 
+    mov bx,ax
+    mov bx,0
+    call FOR 
     jmp $ ; pas de code d'initialisation indésirable
+    
 
+FOR:
+    cmp bx,10
+    je ENDFOR
+    mov si,msg
+    call print
+    add bx,1
+    jmp FOR
+
+ENDFOR:
+
+    ret
 
 
 print:
@@ -30,10 +44,10 @@ print:
     jmp print
 
 done:
-    jmp $ ; boucle effectué->boucle sur la meme addresse
+    ret ; boucle effectué->boucle sur la meme addresse
 
 
     msg:
         db "Hello, World !",0; Chaque byte en code ASCII + 0 pour fin de chaine
         times 510-($-$$) db 0 ; remplir de 0 l'espace restant entre l'addresse courante $ et l'addresse de début $$
-        dw 0xaa55 ; ajout aux 2 derniers bits la valeur 0xaa55
+        dw 0xaa55 ; ajout aux 2 derniers bits la valeur 0xaa55m
