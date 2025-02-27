@@ -1,53 +1,92 @@
-;Réalisé avec NASM
+;Lefki Meidi Thomas
+;Réalisé avec Nasm
+; Timer 16 bits
+[bits 16]
+[org 0x7c00]
 
-
-[bits 16] ; Précise le Mode réel 16 bits
-[org 0x7c00] ; démarre à l'addresse 0x7c00 après que la valeur 0xaa55 soit trouvé dans les 2 derniers
-; bits du bootloader 
-
-global _start
-
+section .data
+    seconds db 0
+    TIME_1 db 0
+    fn_b db 0
 section .text
 
-_start:
+    global _start
 
-    xor ax,ax
-    mov ds,ax
-    mov es,ax
+_start:
+    xor ax, ax
+    mov es, ax
+    mov ds, ax
+    mov cl,0
     mov si,msg
-    mov bx,ax
-    mov bx,0
-    call FOR 
-    jmp $ ; pas de code d'initialisation indésirable
-    
+    call FOR     
+
+    jmp $ ; boucle infini sur une addresse après avoir exécuter le code pour éviter d'executer du code indésirable
 
 FOR:
-    cmp bx,10
+    cmp byte [fn_b],4
     je ENDFOR
     mov si,msg
+    call TIMER
     call print
-    add bx,1
+    mov cl,1
+    add byte [fn_b],cl
     jmp FOR
 
 ENDFOR:
-
     ret
 
 
 print:
-    mov al,[si] ; copie
-    cmp al,0
-    je done
-    mov ah,0x0e
-    int 0x10
-    inc si
-    jmp print
+    mov al, [si]      
+    cmp byte [si], 0  
+    je print_done     
+    mov ah, 0x0e      
+    int 0x10          
+    inc si            
+    jmp print         
 
-done:
-    ret ; boucle effectué->boucle sur la meme addresse
+print_done:
+    ret               
+
+;;;;;;;;;;;;;;;;;;;;;;
+;;                  ;;
+;; TIMER ARTIFICIEL ;;
+;;                  ;;
+;;;;;;;;;;;;;;;;;;;;;;
+;TIMER_OUT est une loop dans laquelle il y a une loop imbriquée
+
+TIMER_OUT:
+    cmp bx,5
+    je fin_out
+    inc bx
+    jmp TIMER
+    jmp TIMER_OUT
+
+fin_out:    
+    ret
+;INITIALISATION valeur max de 16 bits 65535 
+
+TIMER:
+    mov cx,65535
+
+; LOOP EXTERIEUR
+
+TIMER_OUTER_BOUCLE:
+    mov dx,65535
+
+;LOOP INTERIEUR
+TIMER_INNER_BOUCLE: 
+    dec dx
+    jnz TIMER_INNER_BOUCLE
+
+    dec cx
+    jnz TIMER_OUTER_BOUCLE
+    jmp TIMER_OUT
 
 
-    msg:
-        db "Hello, World !",0; Chaque byte en code ASCII + 0 pour fin de chaine
-        times 510-($-$$) db 0 ; remplir de 0 l'espace restant entre l'addresse courante $ et l'addresse de début $$
-        dw 0xaa55 ; ajout aux 2 derniers bits la valeur 0xaa55m
+
+msg:
+    db "Hi",10,13, 0
+
+    times 510-($-$$) db 0
+    dw 0xaa55
